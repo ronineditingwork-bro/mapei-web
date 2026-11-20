@@ -29,7 +29,7 @@ jobs:
           BOMOND_PASSWORD: ${{ secrets.BOMOND_PASSWORD }}
         run: |
           mkdir -p _site
-          cp index.html calc.js sellers.js account.js logo.png icon-180.png _site/
+          cp index.html invoice.html calc.js sellers.js account.js logo.png icon-180.png _site/
           java tools/BomondClient.java "$BOMOND_LOGIN" "$BOMOND_PASSWORD" _site/data.xml
       - uses: actions/upload-pages-artifact@v3
         with: { path: _site }

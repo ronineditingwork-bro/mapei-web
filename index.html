@@ -13,10 +13,10 @@
   /* Palette and layout follow the Deante price app */
   :root { --navy:#00497a; --bg:#f6f7f9; --card:#fff; --text:#171f27; --muted:#687079; --line:#e2e6ea; --ok:#1ba64e; --bad:#c0392b; --heart:#f52d44; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { margin:0; height:100%; }
-  body { font:15px/1.35 system-ui, sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; }
+  html, body { margin:0; height:100%; overscroll-behavior:none; -webkit-text-size-adjust:100%; }
+  body { font:15px/1.35 system-ui, sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100dvh; } /* dvh: iPhone Safari toolbar must not cover the bottom menu */
   button { font:inherit; cursor:pointer; }
-  input, select, textarea { font:inherit; width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--text); min-height:46px; }
+  input, select, textarea { font:inherit; font-size:16px; /* under 16px iPhone Safari zooms the page on tap */ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--text); min-height:46px; }
   label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
 
   #splash { position:fixed; inset:0; z-index:20; background:var(--navy); color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:28px; text-align:center; transition:opacity .3s; }
@@ -29,7 +29,7 @@
   @keyframes load { from { transform:translateX(-100%); } to { transform:translateX(260%); } }
   #splash .foot { position:absolute; bottom:28px; font-size:12px; opacity:.85; }
 
-  header { background:var(--navy); color:#fff; flex:none; padding-top:env(safe-area-inset-top); }
+  header { background:var(--navy); color:#fff; flex:none; padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
   .bar-top { display:flex; align-items:center; min-height:58px; padding:0 8px 0 4px; }
   .bar-top .back { background:none; border:0; color:#fff; font-size:38px; line-height:1; width:46px; height:58px; }
   .bar-top h1 { font-size:18px; margin:0; padding:0 8px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -43,7 +43,7 @@
   .search input { border:0; min-height:44px; padding:8px 6px; }
   .sync-line { font-size:12px; color:#dcecf7; margin-top:8px; }
 
-  main { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  main { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left); }
   .body { padding:10px 10px 18px; max-width:980px; margin:0 auto; }
   .muted { color:var(--muted); }
   .center { text-align:center; }
@@ -106,13 +106,13 @@
   .switch { display:flex; align-items:center; justify-content:space-between; min-height:50px; }
   .switch input { width:auto; min-height:0; transform:scale(1.4); }
 
-  nav { flex:none; display:flex; background:#fff; border-top:1px solid var(--line); height:calc(66px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); }
+  nav { flex:none; display:flex; background:#fff; border-top:1px solid var(--line); height:calc(66px + env(safe-area-inset-bottom)); padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
   nav button { flex:1; background:none; border:0; color:var(--muted); font-size:11px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; position:relative; }
   nav button i { font-style:normal; font-size:21px; line-height:1; }
   nav button.on { color:var(--navy); font-weight:700; }
   nav .badge { position:absolute; top:6px; left:calc(50% + 6px); background:var(--heart); color:#fff; border-radius:9px; font-size:10px; min-width:18px; height:18px; line-height:18px; padding:0 4px; font-weight:700; }
 
-  #toast { position:fixed; left:50%; bottom:84px; transform:translateX(-50%); background:rgba(23,31,39,.92); color:#fff; padding:10px 16px; border-radius:20px; font-size:13px; z-index:30; opacity:0; transition:opacity .2s; pointer-events:none; max-width:90vw; text-align:center; }
+  #toast { position:fixed; left:50%; bottom:calc(84px + env(safe-area-inset-bottom)); transform:translateX(-50%); background:rgba(23,31,39,.92); color:#fff; padding:10px 16px; border-radius:20px; font-size:13px; z-index:30; opacity:0; transition:opacity .2s; pointer-events:none; max-width:90vw; text-align:center; }
   #toast.on { opacity:1; }
   dialog { border:0; border-radius:16px; width:min(420px, 92vw); }
   dialog::backdrop { background:rgba(0,0,0,.4); }
@@ -436,10 +436,11 @@ function invoiceScreen() {
   const make = how => {
     const seller = SELLERS[+$('seller').value], no = parseInt($('invNo').value) || 1;
     const lines = cart.map(l => ({ ...l, img: (byId(l.id) || {}).thumb }));
-    const html = buildInvoice({ seller, buyer: store.get('buyer2', {}), comment: $('b_comment').value.trim(), lines, no,
-                                date: $('invDate').value, opts: store.get('invOpts', { photos: true, arts: true }) });
+    const args = { seller, buyer: store.get('buyer2', {}), comment: $('b_comment').value.trim(), lines, no,
+                   date: $('invDate').value, opts: store.get('invOpts', { photos: true, arts: true }) };
+    const html = buildInvoice(args);
     const name = `Счёт ${no} от ${$('invDate').value} ${seller.short}`.replace(/[«»"]/g, '').replace(/[.\s]+$/, ''); // «М. В.» + «.pdf» would give «В..pdf»
-    if (!window.Android) { const w = window.open(''); if (!w) return toast('Разрешите всплывающие окна для этого сайта'); w.document.write(html); w.document.close(); setTimeout(() => w.print(), 800); }
+    if (!window.Android) { try { localStorage.setItem('invoiceHtml', buildInvoice({ ...args, opts: { ...args.opts, toolbar: true } })); } catch (e) { return toast('Не удалось открыть счёт: ' + e.message); } location.href = 'invoice.html'; }
     else if (how === 'pdf') { $('pdfBtn').disabled = true; $('pdfBtn').textContent = 'Создаём PDF…'; window.Android.pdf(html, name); }
     else window.Android.print(html, name);
     store.set('invNo:' + seller.inn, no + 1);

@@ -70,7 +70,8 @@ const money = n => n.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximum
 const escHtml = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // Standard Russian "Счёт на оплату" as a standalone A4 page (794 CSS px wide = A4 at 96 dpi).
-// buyer: { name, inn, kpp, address, phone }; lines: { name, art, qty, price, img }; opts: { photos, arts }.
+// buyer: { name, inn, kpp, address, phone }; lines: { name, art, qty, price, img }; opts: { photos, arts, toolbar }.
+// toolbar: on-screen «Сохранить PDF / Назад» buttons for the iPhone/browser version (hidden when printing).
 function buildInvoice({ seller, buyer = {}, comment = '', lines, no, date, opts = {} }) {
   const e = escHtml;
   const total = lines.reduce((s, l) => s + l.qty * l.price, 0);
@@ -90,7 +91,10 @@ function buildInvoice({ seller, buyer = {}, comment = '', lines, no, date, opts 
   .party { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; margin-bottom: 12px; }
   .items th { background: #f0f0f0; } .r { text-align: right; white-space: nowrap; } .c { text-align: center; }
   .tot { margin-top: 6px; text-align: right; font-weight: bold; } .sign { margin-top: 28px; border-top: 2px solid #000; padding-top: 18px; }
-</style></head><body>
+  .bar { position: sticky; top: 0; display: flex; gap: 10px; margin: -40px -45px 24px; padding: 14px 45px; background: #00497a; }
+  .bar button { font: bold 20px Arial, sans-serif; border: 0; border-radius: 10px; padding: 14px 22px; background: #fff; color: #00497a; }
+  @media print { .bar { display: none; } }
+</style></head><body>${opts.toolbar ? `<div class="bar"><button onclick="history.back()">← Назад</button><button onclick="print()">Сохранить PDF / Поделиться</button></div>` : ''}
 <table class="bank">
   <tr><td colspan="2" rowspan="2" style="width:58%">${e(seller.bank)}<br><span class="small">Банк получателя</span></td><td style="width:8%">БИК</td><td style="border-bottom:0">${e(seller.bik)}</td></tr>
   <tr><td>Сч. №</td><td style="border-top:0">${e(seller.ks)}</td></tr>
