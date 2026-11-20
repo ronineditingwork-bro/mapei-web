@@ -408,7 +408,7 @@ function invoiceScreen() {
     </div>
     <h2 class="sec">Продавец</h2>
     <div class="card">
-      <select id="seller" aria-label="Продавец">${SELLERS.map((s, i) => `<option value="${i}" ${i === si ? 'selected' : ''}>ИП ${esc(s.short)} · ${s.vatRate ? 'НДС ' + s.vatRate + '%' : 'без НДС'}</option>`).join('')}</select>
+      <select id="seller" aria-label="Продавец">${SELLERS.map((s, i) => `<option value="${i}" ${i === si ? 'selected' : ''}>${s.kpp ? '' : 'ИП '}${esc(s.short)} · ${s.vatRate ? 'НДС ' + s.vatRate + '%' : 'без НДС'}</option>`).join('')}</select>
       <div class="row2">
         <div><label for="invNo">Счёт №</label><input id="invNo" type="number" inputmode="numeric" min="1" value="${store.get('invNo:' + SELLERS[si].inn, 1)}"></div>
         <div><label for="invDate">Дата</label><input id="invDate" type="date" value="${new Date().toLocaleDateString('sv')}"></div>
@@ -438,7 +438,7 @@ function invoiceScreen() {
     const lines = cart.map(l => ({ ...l, img: (byId(l.id) || {}).thumb }));
     const html = buildInvoice({ seller, buyer: store.get('buyer2', {}), comment: $('b_comment').value.trim(), lines, no,
                                 date: $('invDate').value, opts: store.get('invOpts', { photos: true, arts: true }) });
-    const name = `Счёт ${no} от ${$('invDate').value} ${seller.short}`.replace(/[.\s]+$/, ''); // «М. В.» + «.pdf» would give «В..pdf»
+    const name = `Счёт ${no} от ${$('invDate').value} ${seller.short}`.replace(/[«»"]/g, '').replace(/[.\s]+$/, ''); // «М. В.» + «.pdf» would give «В..pdf»
     if (!window.Android) { const w = window.open(''); if (!w) return toast('Разрешите всплывающие окна для этого сайта'); w.document.write(html); w.document.close(); setTimeout(() => w.print(), 800); }
     else if (how === 'pdf') { $('pdfBtn').disabled = true; $('pdfBtn').textContent = 'Создаём PDF…'; window.Android.pdf(html, name); }
     else window.Android.print(html, name);

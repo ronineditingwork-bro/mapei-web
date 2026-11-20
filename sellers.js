@@ -1,5 +1,6 @@
 // Seller requisites for invoices. To add a seller, copy a block and fill it in.
 // vatRate: НДС in % already included in prices (0 = без НДС).
+// A company (ООО) also has kpp and director; then the invoice shows КПП/ОГРН and Руководитель/Главный бухгалтер.
 const SELLERS = [
   {
     name: 'ИП Ненашев Максим Владимирович', short: 'Ненашев М. В.',
@@ -16,5 +17,14 @@ const SELLERS = [
     phone: '8-989-266-9-266',
     bank: 'ФИЛИАЛ "РОСТОВСКИЙ" АО "АЛЬФА-БАНК"', bik: '046015207', ks: '30101810500000000207', account: '40802810626060004475',
     vatRate: 0
+  },
+  {
+    name: 'ООО «АМАНА ГРУПП»', short: 'ООО «АМАНА ГРУПП»',
+    inn: '2308297407', kpp: '230801001', ogrn: '1242300032842',
+    address: '350020, г. Краснодар, ул. им. Бабушкина, 248, пом. А102',
+    phone: '+7 (918) 999-90-04',
+    bank: 'ФИЛИАЛ "РОСТОВСКИЙ" АО "АЛЬФА-БАНК"', bik: '046015207', ks: '30101810500000000207', account: '40702810726020017897',
+    director: 'Ступичкин А. А.',
+    vatRate: 22
   }
 ];

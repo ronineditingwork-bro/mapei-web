@@ -94,12 +94,12 @@ function buildInvoice({ seller, buyer = {}, comment = '', lines, no, date, opts 
 <table class="bank">
   <tr><td colspan="2" rowspan="2" style="width:58%">${e(seller.bank)}<br><span class="small">Банк получателя</span></td><td style="width:8%">БИК</td><td style="border-bottom:0">${e(seller.bik)}</td></tr>
   <tr><td>Сч. №</td><td style="border-top:0">${e(seller.ks)}</td></tr>
-  <tr><td>ИНН ${e(seller.inn)}</td><td>КПП</td><td rowspan="2">Сч. №</td><td rowspan="2">${e(seller.account)}</td></tr>
+  <tr><td>ИНН ${e(seller.inn)}</td><td>КПП ${e(seller.kpp || '')}</td><td rowspan="2">Сч. №</td><td rowspan="2">${e(seller.account)}</td></tr>
   <tr><td colspan="2">${e(seller.name)}<br><span class="small">Получатель</span></td></tr>
 </table>
 <h1>Счёт на оплату № ${e(no)} от ${d}</h1>
 <div class="party">
-  <div>Поставщик (Исполнитель):</div><div><b>${e(seller.name)}, ИНН ${e(seller.inn)}, ОГРНИП ${e(seller.ogrn)}, ${e(seller.address)}, тел.: ${e(seller.phone)}</b></div>
+  <div>Поставщик (Исполнитель):</div><div><b>${e(seller.name)}, ИНН ${e(seller.inn)}, ${seller.kpp ? `КПП ${e(seller.kpp)}, ОГРН` : 'ОГРНИП'} ${e(seller.ogrn)}, ${e(seller.address)}, тел.: ${e(seller.phone)}</b></div>
   <div>Покупатель (Заказчик):</div><div><b>${buyerText}</b></div>
 </div>
 ${comment ? `<div class="comment">${e(comment).replace(/\n/g, '<br>')}</div>` : ''}
@@ -108,7 +108,7 @@ ${comment ? `<div class="comment">${e(comment).replace(/\n/g, '<br>')}</div>` : 
 <div class="tot">${seller.vatRate ? `В том числе НДС (${seller.vatRate}%): ${money(Math.round(total * seller.vatRate / (100 + seller.vatRate) * 100) / 100)}` : 'Без налога (НДС)'}</div>
 <div class="tot">Всего к оплате: ${money(total)}</div>
 <p>Всего наименований ${lines.length}, на сумму ${money(total)} руб.<br><b>${rubToWords(total)}</b></p>
-<div class="sign">Предприниматель ______________________ ${e(seller.short)}</div>
+<div class="sign">${seller.director ? `Руководитель ______________________ ${e(seller.director)}<br><br>Главный бухгалтер ______________________ ${e(seller.director)}` : `Предприниматель ______________________ ${e(seller.short)}`}</div>
 </body></html>`;
 }
 
