@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MAPEI">
+<meta name="theme-color" content="#00497a">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>MAPEI</title>
+<style>
+  /* Palette and layout follow the Deante price app */
+  :root { --navy:#00497a; --bg:#f6f7f9; --card:#fff; --text:#171f27; --muted:#687079; --line:#e2e6ea; --ok:#1ba64e; --bad:#c0392b; --heart:#f52d44; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; }
+  body { font:15px/1.35 system-ui, sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; }
+  button { font:inherit; cursor:pointer; }
+  input, select, textarea { font:inherit; width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--text); min-height:46px; }
+  label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
+
+  #splash { position:fixed; inset:0; z-index:20; background:var(--navy); color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:28px; text-align:center; transition:opacity .3s; }
+  #splash.hide { opacity:0; pointer-events:none; }
+  #splash img { width:88px; height:88px; }
+  #splash .brand { font-size:44px; font-weight:800; letter-spacing:.06em; margin:14px 0 4px; }
+  #splash .sub { font-size:18px; opacity:.9; }
+  #splash .bar { width:min(320px, 80%); height:4px; border-radius:2px; background:rgba(255,255,255,.35); margin:36px 0 10px; overflow:hidden; }
+  #splash .bar i { display:block; height:100%; width:40%; background:#42b0f1; animation:load 1.1s infinite ease-in-out; }
+  @keyframes load { from { transform:translateX(-100%); } to { transform:translateX(260%); } }
+  #splash .foot { position:absolute; bottom:28px; font-size:12px; opacity:.85; }
+
+  header { background:var(--navy); color:#fff; flex:none; padding-top:env(safe-area-inset-top); }
+  .bar-top { display:flex; align-items:center; min-height:58px; padding:0 8px 0 4px; }
+  .bar-top .back { background:none; border:0; color:#fff; font-size:38px; line-height:1; width:46px; height:58px; }
+  .bar-top h1 { font-size:18px; margin:0; padding:0 8px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hero { padding:8px 12px 13px; }
+  .logo-row { display:flex; align-items:center; gap:10px; height:48px; }
+  .logo-row img { width:32px; height:32px; }
+  .logo-row b { font-size:25px; letter-spacing:.05em; flex:1; }
+  .logo-row button { background:none; border:0; color:#fff; font-size:22px; width:44px; height:44px; }
+  .search { display:flex; align-items:center; background:#fff; border-radius:12px; padding:0 4px 0 10px; height:48px; }
+  .search span { color:var(--muted); font-size:22px; width:30px; }
+  .search input { border:0; min-height:44px; padding:8px 6px; }
+  .sync-line { font-size:12px; color:#dcecf7; margin-top:8px; }
+
+  main { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .body { padding:10px 10px 18px; max-width:980px; margin:0 auto; }
+  .muted { color:var(--muted); }
+  .center { text-align:center; }
+  h2.sec { font-size:15px; margin:14px 4px 8px; }
+
+  .tiles { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; }
+  .tile { background:#fff; border:0; border-radius:10px; padding:5px 5px 3px; text-align:left; color:var(--text); }
+  .tile .im { height:112px; border-radius:10px; background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .tile .im img { max-width:100%; max-height:100%; object-fit:contain; }
+  .tile b { display:block; font-size:13px; padding:8px 6px 2px; min-height:40px; }
+  .tile small { display:block; font-size:11px; color:var(--muted); padding:0 6px 6px; }
+
+  .chips { display:flex; gap:6px; margin-bottom:9px; }
+  .chips button { flex:1; height:42px; border-radius:9px; background:#fff; color:var(--navy); border:1px solid #c3cdd6; font-weight:700; font-size:14px; }
+  .chips button.on { background:var(--navy); color:#fff; border-color:var(--navy); }
+
+  .rows { display:grid; grid-template-columns:minmax(0,1fr); gap:1px; background:var(--line); border-radius:10px; overflow:hidden; }
+  .prow { display:flex; align-items:center; gap:8px; background:#fff; padding:7px 6px; min-height:130px; }
+  .prow .im { width:96px; height:110px; flex:none; border-radius:10px; background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .prow .im img { max-width:100%; max-height:100%; object-fit:contain; }
+  .prow .mid { flex:1; min-width:0; }
+  .prow .sku { font-weight:700; font-size:14px; }
+  .prow .nm { font-size:12px; margin:3px 0; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .prow .pr { font-weight:800; font-size:16px; }
+  .prow .side { width:62px; flex:none; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .st { font-size:11px; font-weight:700; }
+  .st.in { color:var(--ok); } .st.out { color:var(--bad); }
+  .heart { background:none; border:0; font-size:27px; line-height:1; width:48px; height:44px; color:var(--text); }
+  .heart.on { color:var(--heart); }
+  .plus { width:44px; height:44px; border-radius:9px; border:0; background:var(--navy); color:#fff; font-size:24px; line-height:1; }
+  .qty { display:flex; align-items:center; gap:2px; }
+  .qty button { width:36px; height:38px; border-radius:9px; border:1px solid #c3cdd6; background:#fff; color:var(--navy); font-size:20px; font-weight:700; }
+  .qty span { min-width:26px; text-align:center; font-weight:700; }
+  .side .qty { flex-direction:column; }
+
+  .hero-img { height:285px; border-radius:10px; background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:6px; }
+  .hero-img img { max-width:100%; max-height:100%; object-fit:contain; }
+  .sku-row { display:flex; align-items:center; }
+  .sku-row b { font-size:24px; flex:1; padding:4px 6px; }
+  .d-name { font-size:15px; padding:2px 6px; }
+  .d-price { font-size:25px; font-weight:800; padding:6px; }
+  .card { background:#fff; border-radius:10px; padding:8px 10px; margin-top:8px; }
+  .spec { display:grid; grid-template-columns:1fr 1fr; gap:4px 10px; font-size:13px; }
+  .spec div:nth-child(odd) { color:var(--muted); }
+  .spec div:nth-child(even) { font-weight:700; }
+  .btn { height:52px; border-radius:9px; border:0; background:var(--navy); color:#fff; font-weight:700; font-size:15px; width:100%; }
+  .btn.ghost { background:#fff; color:var(--navy); border:1px solid #c3cdd6; }
+  .btn:disabled { opacity:.45; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .add-row { display:grid; grid-template-columns:110px 1fr; gap:8px; margin-top:10px; }
+  .result { margin-top:10px; padding:10px; border-radius:10px; background:var(--bg); }
+  .result b { font-size:20px; }
+  .hint { font-size:12px; color:var(--muted); margin-top:6px; }
+
+  .cline { display:flex; gap:8px; align-items:center; background:#fff; padding:6px; }
+  .cline .im { width:64px; height:72px; flex:none; border-radius:8px; background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .cline .im img { max-width:100%; max-height:100%; object-fit:contain; }
+  .cline input { width:96px; min-height:38px; padding:6px 8px; }
+  .total { text-align:right; font-size:24px; font-weight:800; padding:14px 6px; }
+  .switch { display:flex; align-items:center; justify-content:space-between; min-height:50px; }
+  .switch input { width:auto; min-height:0; transform:scale(1.4); }
+
+  nav { flex:none; display:flex; background:#fff; border-top:1px solid var(--line); height:calc(66px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); }
+  nav button { flex:1; background:none; border:0; color:var(--muted); font-size:11px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; position:relative; }
+  nav button i { font-style:normal; font-size:21px; line-height:1; }
+  nav button.on { color:var(--navy); font-weight:700; }
+  nav .badge { position:absolute; top:6px; left:calc(50% + 6px); background:var(--heart); color:#fff; border-radius:9px; font-size:10px; min-width:18px; height:18px; line-height:18px; padding:0 4px; font-weight:700; }
+
+  #toast { position:fixed; left:50%; bottom:84px; transform:translateX(-50%); background:rgba(23,31,39,.92); color:#fff; padding:10px 16px; border-radius:20px; font-size:13px; z-index:30; opacity:0; transition:opacity .2s; pointer-events:none; max-width:90vw; text-align:center; }
+  #toast.on { opacity:1; }
+  dialog { border:0; border-radius:16px; width:min(420px, 92vw); }
+  dialog::backdrop { background:rgba(0,0,0,.4); }
+
+  /* Unfolded Fold: more tiles and two product columns */
+  @media (min-width:700px) {
+    .tiles { grid-template-columns:repeat(4, minmax(0,1fr)); }
+    .rows { grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .detail-wrap { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; align-items:start; }
+  }
+</style>
+</head>
+<body>
+<div id="splash">
+  <img src="logo.png" alt="">
+  <div class="brand">MAPEI</div>
+  <div class="sub">Клеи, затирки и строительная химия</div>
+  <div class="bar"><i></i></div>
+  <div id="splashText" style="font-size:12px;opacity:.9">Загрузка каталога…</div>
+  <div class="foot">AMANA GROUP · bathroom design</div>
+</div>
+<header id="top"></header>
+<main id="main"><div class="body" id="view"></div></main>
+<nav id="nav">
+  <button data-go="#/"><i>▣</i>Каталог</button>
+  <button data-go="#/fav"><i>♡</i>Избранное</button>
+  <button data-go="#/cart"><i>🛒</i>Корзина<span class="badge" id="cartBadge" hidden></span></button>
+  <button data-go="#/more"><i>☰</i>Ещё</button>
+</nav>
+<div id="toast" role="status"></div>
+
+<dialog id="loginDlg">
+  <form method="dialog">
+    <h3 style="margin-top:0">Вход в кабинет Бомонд</h3>
+    <label for="login">Логин</label><input id="login" autocomplete="username">
+    <label for="pass">Пароль</label><input id="pass" type="password" autocomplete="current-password">
+    <p class="hint">Хранится только на этом телефоне.</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button class="btn ghost" style="width:auto;padding:0 16px" value="cancel">Отмена</button>
+      <button class="btn" style="width:auto;padding:0 16px" value="ok">Сохранить</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="calc.js"></script>
+<script src="sellers.js"></script>
+<script src="account.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const rubRaw = n => Math.round(n).toLocaleString('ru-RU') + ' ₽';
+const num = n => (Math.round(n * 100) / 100).toLocaleString('ru-RU');
+const IMG_BASE = 'https://lk.bomondceramica.ru';
+const img = (src, cls = 'im') => `<div class="${cls}">${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</div>`;
+
+let items = store.get('items', []);
+let cart = store.get('cart', []);
+let fav = new Set(store.get('fav', []));
+let sortMode = store.get('sort', 'name');
+let onlyStock = store.get('onlyStock', false);
+let markup = store.get('markup', 0);
+let showPrices = store.get('showPrices', true);
+let syncing = false;
+
+// Price shown to the client: retail price from Bomond plus the markup/discount from «Ещё».
+const sell = p => Math.round(p * (1 + markup / 100));
+const priceText = p => showPrices ? rubRaw(sell(p)) : 'Цена скрыта';
+const byId = id => items.find(i => i.id === id);
+const inCart = id => (cart.find(l => l.id === id) || {}).qty || 0;
+
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 2200); }
+
+function parseXml(xml) {
+  const doc = new DOMParser().parseFromString(xml, 'text/xml');
+  const t = (o, tag, n = 0) => (o.getElementsByTagName(tag)[n] || {}).textContent || '';
+  const pic = p => p ? IMG_BASE + p : ''; // export has a small "resize1" picture first, then the full-size one
+  return [...doc.getElementsByTagName('offer')]
+    .map(o => ({ id: o.getAttribute('id'), name: t(o, 'name').trim(), art: t(o, 'articul'), qty: +t(o, 'quantity') || 0, price: +t(o, 'price') || 0,
+                 thumb: pic(t(o, 'picture')), photo: pic(t(o, 'picture', 1) || t(o, 'picture')) }))
+    .filter(i => /MAPEI|МАПЕИ/i.test(i.name)); // the site's export also contains Fila/Tegola
+}
+
+// ---------- shared pieces ----------
+function bar(title, sub) {
+  $('top').innerHTML = `<div class="bar-top"><button class="back" aria-label="Назад" onclick="goBack()">‹</button><h1>${esc(title)}${sub ? `<small style="display:block;font-size:13px;font-weight:400;opacity:.85">${esc(sub)}</small>` : ''}</h1></div>`;
+}
+function navOn(hash) {
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.go === hash));
+}
+function goBack() { if (history.length > 1) history.back(); else location.hash = '#/'; }
+
+function sorted(list) {
+  const a = list.filter(i => !onlyStock || i.qty > 0);
+  const cmp = { name: (x, y) => x.name.localeCompare(y.name, 'ru'), priceAsc: (x, y) => x.price - y.price,
+                priceDesc: (x, y) => y.price - x.price, stock: (x, y) => y.qty - x.qty }[sortMode];
+  return a.sort(cmp);
+}
+
+function row(i) {
+  const n = inCart(i.id);
+  return `<div class="prow" data-open="${esc(i.id)}">
+    ${img(i.thumb)}
+    <div class="mid">
+      <div class="sku">${esc(i.art)}</div>
+      <div class="nm">${esc(i.name)}</div>
+      <div class="pr">${priceText(i.price)}</div>
+      <div class="st ${i.qty > 0 ? 'in' : 'out'}">${i.qty > 0 ? 'В наличии: ' + i.qty + ' уп.' : 'Нет в наличии'}</div>
+    </div>
+    <div class="side">
+      <button class="heart ${fav.has(i.id) ? 'on' : ''}" data-fav="${esc(i.id)}" aria-label="В избранное">${fav.has(i.id) ? '♥' : '♡'}</button>
+      ${n ? `<div class="qty"><button data-plus="${esc(i.id)}" aria-label="Добавить">+</button><span>${n}</span><button data-minus="${esc(i.id)}" aria-label="Убрать">−</button></div>`
+          : `<button class="plus" data-plus="${esc(i.id)}" aria-label="В корзину">+</button>`}
+    </div>
+  </div>`;
+}
+
+function listScreen(title, list, empty) {
+  const shown = sorted(list);
+  bar(`${title}  (${shown.length})`);
+  $('view').innerHTML = `
+    <div class="chips">
+      <button id="sortBtn">Сортировка</button>
+      <button id="stockBtn" class="${onlyStock ? 'on' : ''}">Наличие</button>
+    </div>
+    ${shown.length ? `<div class="rows">${shown.map(row).join('')}</div>` : `<p class="muted center" style="padding:40px 10px">${empty}</p>`}`;
+  $('sortBtn').onclick = () => {
+    const opts = [['name', 'По названию'], ['priceAsc', 'Цена: сначала дешевле'], ['priceDesc', 'Цена: сначала дороже'], ['stock', 'Больше на складе']];
+    const i = opts.findIndex(o => o[0] === sortMode);
+    sortMode = opts[(i + 1) % opts.length][0]; store.set('sort', sortMode);
+    toast('Сортировка: ' + opts.find(o => o[0] === sortMode)[1]); route();
+  };
+  $('stockBtn').onclick = () => { onlyStock = !onlyStock; store.set('onlyStock', onlyStock); toast(onlyStock ? 'Только в наличии' : 'Все товары'); route(); };
+}
+
+// ---------- screens ----------
+function syncText() {
+  const when = store.get('syncedAt', null);
+  if (syncing) return 'Обновление остатков…';
+  return items.length ? `${items.length} товаров · обновлено ${new Date(when).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : 'Каталог ещё не загружен';
+}
+
+function home() {
+  $('top').innerHTML = `<div class="hero">
+    <div class="logo-row"><img src="logo.png" alt=""><b>MAPEI</b><button id="syncBtn" aria-label="Обновить остатки">↻</button></div>
+    <form class="search" id="searchForm"><span>⌕</span><input id="q" type="search" enterkeyhint="search" placeholder="Поиск по артикулу или названию…"></form>
+    <div class="sync-line" id="syncLine">${syncText()}</div>
+  </div>`;
+  $('searchForm').onsubmit = e => { e.preventDefault(); const q = $('q').value.trim(); if (q) location.hash = '#/s/' + encodeURIComponent(q); };
+  $('syncBtn').onclick = sync;
+  if (!items.length) {
+    $('view').innerHTML = `<p class="muted center" style="padding:40px 10px">Товаров пока нет. Проверьте интернет и нажмите «Загрузить».</p><button class="btn" id="emptySync">Загрузить товары</button>`;
+    $('emptySync').onclick = sync;
+    return;
+  }
+  const groups = GROUPS.map(g => ({ g, list: items.filter(i => group(i.name) === g) })).filter(x => x.list.length);
+  const cover = list => (list.find(i => i.thumb && i.qty > 0) || list.find(i => i.thumb) || {}).thumb;
+  $('view').innerHTML = `
+    <div class="tiles">${groups.map(({ g, list }) => `
+      <button class="tile" data-go="#/g/${encodeURIComponent(g)}">${img(cover(list))}<b>${esc(g)}</b><small>${list.length} товаров</small></button>`).join('')}
+    </div>
+    <button class="btn ghost" data-go="#/g/${encodeURIComponent('Все товары')}" style="margin-top:10px">Все товары · ${items.length}</button>
+    <p class="muted center" style="font-size:12px;margin-top:12px">Каталог Mapei · ${groups.length} групп · ${items.length} артикулов</p>`;
+}
+
+function groupScreen(g) {
+  listScreen(g, g === 'Все товары' ? items : items.filter(i => group(i.name) === g), onlyStock ? 'Нет товаров в наличии. Нажмите «Наличие», чтобы показать все.' : 'В этой группе пока нет товаров.');
+}
+
+function searchScreen(q) {
+  const needle = q.toLowerCase();
+  listScreen('Поиск: ' + q, items.filter(i => (i.name + ' ' + i.art).toLowerCase().includes(needle)), 'Ничего не найдено. Попробуйте артикул или часть названия.');
+}
+
+function favScreen() {
+  bar(`Избранное (${fav.size})`);
+  const list = items.filter(i => fav.has(i.id));
+  $('view').innerHTML = list.length ? `<div class="rows">${list.map(row).join('')}</div>`
+    : `<p class="muted center" style="padding:40px 10px">Здесь будут товары, которые вы отметите сердцем.</p>`;
+}
+
+function detail(id) {
+  const item = byId(id);
+  if (!item) { bar('Товар'); $('view').innerHTML = '<p class="muted center">Товар не найден — возможно, его убрали из выгрузки.</p>'; return; }
+  bar('Карточка товара');
+  const pack = parsePack(item.name) || { size: 0, unit: 'кг' };
+  const saved = store.get('rate:' + item.art, null);
+  const grout = isGrout(item.name);
+  $('view').innerHTML = `<div class="detail-wrap"><div>
+    <div class="hero-img">${item.photo ? `<img src="${esc(item.photo)}" alt="" onerror="this.remove()">` : ''}</div>
+    <div class="sku-row"><b>${esc(item.art)}</b><button class="heart ${fav.has(item.id) ? 'on' : ''}" data-fav="${esc(item.id)}" aria-label="В избранное">${fav.has(item.id) ? '♥' : '♡'}</button></div>
+    <div class="d-name">${esc(item.name)}</div>
+    <div class="d-price">${priceText(item.price)}</div>
+    <div class="card spec">
+      <div>Группа</div><div>${esc(group(item.name))}</div>
+      <div>Артикул</div><div>${esc(item.art)}</div>
+      ${pack.size ? `<div>Фасовка</div><div>${num(pack.size)} ${pack.unit}</div>` : ''}
+      <div>Наличие</div><div class="st ${item.qty > 0 ? 'in' : 'out'}" style="font-size:13px">${item.qty > 0 ? item.qty + ' уп.' : 'нет'}</div>
+      <div>Бренд</div><div>Mapei</div>
+    </div>
+    <div class="add-row">
+      <input id="addQty" type="number" inputmode="numeric" min="1" step="1" value="1" aria-label="Количество упаковок">
+      <button class="btn" id="addBtn">В корзину</button>
+    </div>
+  </div><div>
+    <div class="card">
+      <b>Калькулятор расхода</b>
+      <div class="row2">
+        <div><label for="area">Площадь, м²</label><input id="area" type="number" inputmode="decimal" min="0" step="0.1" value="10"></div>
+        <div><label for="pack">Упаковка, ${pack.unit}</label><input id="pack" type="number" inputmode="decimal" min="0" step="0.01" value="${pack.size || ''}"></div>
+      </div>
+      ${grout ? `<div class="row2">
+        <div><label for="ta">Плитка A, мм</label><input id="ta" type="number" inputmode="decimal" value="300"></div>
+        <div><label for="tb">Плитка B, мм</label><input id="tb" type="number" inputmode="decimal" value="300"></div>
+        <div><label for="tc">Толщина плитки, мм</label><input id="tc" type="number" inputmode="decimal" value="8"></div>
+        <div><label for="td">Ширина шва, мм</label><input id="td" type="number" inputmode="decimal" value="3"></div>
+      </div>` : ''}
+      <div class="row2">
+        <div><label for="rate">Расход, ${pack.unit}/м²</label><input id="rate" type="number" inputmode="decimal" min="0" step="0.01" value="${saved ?? (defaultRate(item.name) || '')}" ${grout ? 'readonly' : ''}></div>
+        <div><label for="reserve">Запас, %</label><input id="reserve" type="number" inputmode="decimal" min="0" value="10"></div>
+      </div>
+      <p class="hint">${grout ? 'Расход затирки по формуле Mapei: (A+B)/(A·B)·толщина·шов·1,6.' : 'Расход примерный — уточните по техлисту Mapei. Ваше значение запомнится.'}</p>
+      <div class="result" id="out"></div>
+      <button class="btn ghost" id="calcAdd" style="margin-top:10px">Добавить рассчитанное в корзину</button>
+    </div>
+  </div></div>`;
+
+  const v = id => parseFloat(($(id) || {}).value) || 0;
+  let packs = 0;
+  const update = () => {
+    if ($('ta')) $('rate').value = +groutRate(v('ta'), v('tb'), v('tc'), v('td')).toFixed(3);
+    else if ($('rate').value !== '') store.set('rate:' + item.art, v('rate'));
+    const r = calc({ area: v('area'), rate: v('rate'), reserve: v('reserve'), packSize: v('pack'), price: sell(item.price), stock: item.qty });
+    packs = v('rate') && v('pack') ? r.packs : 0;
+    $('calcAdd').disabled = !packs;
+    $('calcAdd').textContent = packs ? `Добавить ${packs} уп. в корзину` : 'Добавить рассчитанное в корзину';
+    $('out').innerHTML = !packs ? '<span class="hint">Укажите расход и фасовку.</span>' : `
+      Нужно: ${num(r.need)} ${pack.unit}<br>Упаковок: <b>${r.packs}</b><br>Сумма: <b>${showPrices ? rubRaw(r.sum) : '—'}</b><br>
+      <span class="st ${r.enough ? 'in' : 'out'}" style="font-size:13px">${r.enough ? 'Хватает на складе' : 'На складе только ' + item.qty + ' уп.'}</span>`;
+  };
+  $('view').querySelectorAll('.card input').forEach(el => el.addEventListener('input', update));
+  update();
+  $('addBtn').onclick = () => addToCart(item, Math.max(1, parseInt($('addQty').value) || 1));
+  $('calcAdd').onclick = () => packs && addToCart(item, packs);
+}
+
+function cartScreen() {
+  bar('Корзина');
+  if (!cart.length) { $('view').innerHTML = '<p class="muted center" style="padding:40px 10px">Корзина пуста. Нажмите «+» у товара или «В корзину» в карточке.</p>'; return; }
+  const si = Math.min(store.get('seller', 0), SELLERS.length - 1);
+  const total = cart.reduce((s, l) => s + l.qty * l.price, 0);
+  $('view').innerHTML = `
+    <div class="rows">${cart.map((l, i) => { const it = byId(l.id) || {}; return `
+      <div class="cline">
+        ${img(it.thumb)}
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700">${esc(l.art)}</div>
+          <div class="muted" style="font-size:11px">${esc(l.name)}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px"><input type="number" inputmode="decimal" min="0" step="0.01" value="${l.price}" data-price="${i}" aria-label="Цена за упаковку"> ₽</div>
+        </div>
+        <div class="qty"><button data-cminus="${i}" aria-label="Меньше">−</button><span>${l.qty}</span><button data-cplus="${i}" aria-label="Больше">+</button></div>
+      </div>`; }).join('')}</div>
+    <div class="total">Итого: ${rubRaw(total)}</div>
+    <div class="row2">
+      <button class="btn ghost" id="clearCart">Очистить</button>
+      <button class="btn" data-go="#/invoice">Оформить счёт →</button>
+    </div>`;
+  const view = $('view');
+  view.querySelectorAll('[data-price]').forEach(el => el.onchange = () => { const p = parseFloat(el.value); if (p >= 0) cart[el.dataset.price].price = p; saveCart(); cartScreen(); });
+  view.querySelectorAll('[data-cplus]').forEach(b => b.onclick = () => { cart[b.dataset.cplus].qty++; saveCart(); cartScreen(); });
+  view.querySelectorAll('[data-cminus]').forEach(b => b.onclick = () => { const l = cart[b.dataset.cminus]; if (--l.qty <= 0) cart.splice(+b.dataset.cminus, 1); saveCart(); cartScreen(); });
+  $('clearCart').onclick = () => { if (confirm('Очистить корзину?')) { cart = []; saveCart(); cartScreen(); } };
+}
+
+// «Счёт на оплату»: options, seller, client fields, then «Создать PDF» (made right in the app).
+function invoiceScreen() {
+  if (!cart.length) { location.replace('#/cart'); return; }
+  const total = cart.reduce((s, l) => s + l.qty * l.price, 0), packs = cart.reduce((s, l) => s + l.qty, 0);
+  bar('Счёт на оплату', `${cart.length} поз. · ${packs} уп. · ${rubRaw(total)}`);
+  const si = Math.min(store.get('seller', 0), SELLERS.length - 1);
+  const opts = store.get('invOpts', { photos: true, arts: true });
+  const b = store.get('buyer2', {});
+  const field = (id, label, type = 'text', mode = '') => `<label for="b_${id}">${label}</label><input id="b_${id}" type="${type}" ${mode ? `inputmode="${mode}"` : ''} value="${esc(b[id] || '')}">`;
+  const sw = (id, title, sub) => `<label class="switch" style="margin:0;color:var(--text)"><span><span style="font-size:16px">${title}</span><br><span class="muted" style="font-size:13px">${sub}</span></span><input type="checkbox" id="o_${id}" ${opts[id] ? 'checked' : ''}></label>`;
+  $('view').innerHTML = `
+    <div class="card">
+      ${sw('photos', 'Фото товаров', 'Картинка у каждой позиции в счёте')}
+      <hr style="border:0;border-top:1px solid var(--line);margin:4px 0">
+      ${sw('arts', 'Артикулы', 'Выключите, чтобы клиент не видел артикулы')}
+    </div>
+    <h2 class="sec">Продавец</h2>
+    <div class="card">
+      <select id="seller" aria-label="Продавец">${SELLERS.map((s, i) => `<option value="${i}" ${i === si ? 'selected' : ''}>ИП ${esc(s.short)} · ${s.vatRate ? 'НДС ' + s.vatRate + '%' : 'без НДС'}</option>`).join('')}</select>
+      <div class="row2">
+        <div><label for="invNo">Счёт №</label><input id="invNo" type="number" inputmode="numeric" min="1" value="${store.get('invNo:' + SELLERS[si].inn, 1)}"></div>
+        <div><label for="invDate">Дата</label><input id="invDate" type="date" value="${new Date().toLocaleDateString('sv')}"></div>
+      </div>
+    </div>
+    <h2 class="sec">Покупатель</h2>
+    <div class="card">
+      ${field('name', 'Кому (имя или компания)')}
+      <div class="row2"><div>${field('inn', 'ИНН', 'text', 'numeric')}</div><div>${field('kpp', 'КПП', 'text', 'numeric')}</div></div>
+      ${field('address', 'Адрес')}
+      ${field('phone', 'Телефон', 'tel')}
+      <label for="b_comment">Комментарий в начале счёта</label><textarea id="b_comment" rows="2">${esc(store.get('invComment', ''))}</textarea>
+    </div>
+    <button class="btn ghost" id="printBtn" style="margin-top:12px;height:44px">Печать (через Android)</button>
+    <div style="position:sticky;bottom:0;background:var(--bg);padding:12px 0 4px;margin-top:8px">
+      <button class="btn" id="pdfBtn">Создать PDF</button>
+    </div>`;
+  const view = $('view');
+  view.querySelectorAll('[id^="b_"]').forEach(el => el.oninput = () => {
+    if (el.id === 'b_comment') return store.set('invComment', el.value);
+    const cur = store.get('buyer2', {}); cur[el.id.slice(2)] = el.value.trim(); store.set('buyer2', cur);
+  });
+  view.querySelectorAll('[id^="o_"]').forEach(el => el.onchange = () => { const o = store.get('invOpts', { photos: true, arts: true }); o[el.id.slice(2)] = el.checked; store.set('invOpts', o); });
+  $('seller').onchange = () => { store.set('seller', +$('seller').value); $('invNo').value = store.get('invNo:' + SELLERS[+$('seller').value].inn, 1); };
+  const make = how => {
+    const seller = SELLERS[+$('seller').value], no = parseInt($('invNo').value) || 1;
+    const lines = cart.map(l => ({ ...l, img: (byId(l.id) || {}).thumb }));
+    const html = buildInvoice({ seller, buyer: store.get('buyer2', {}), comment: $('b_comment').value.trim(), lines, no,
+                                date: $('invDate').value, opts: store.get('invOpts', { photos: true, arts: true }) });
+    const name = `Счёт ${no} от ${$('invDate').value} ${seller.short}`.replace(/[.\s]+$/, ''); // «М. В.» + «.pdf» would give «В..pdf»
+    if (!window.Android) { const w = window.open(''); if (!w) return toast('Разрешите всплывающие окна для этого сайта'); w.document.write(html); w.document.close(); setTimeout(() => w.print(), 800); }
+    else if (how === 'pdf') { $('pdfBtn').disabled = true; $('pdfBtn').textContent = 'Создаём PDF…'; window.Android.pdf(html, name); }
+    else window.Android.print(html, name);
+    store.set('invNo:' + seller.inn, no + 1);
+    $('invNo').value = no + 1;
+  };
+  $('pdfBtn').onclick = () => make('pdf');
+  $('printBtn').onclick = () => make('print');
+}
+
+// Called by MainActivity when the PDF is saved (Downloads/MAPEI) and the «Send» sheet is open.
+window.onPdf = (err, file) => {
+  if ($('pdfBtn')) { $('pdfBtn').disabled = false; $('pdfBtn').textContent = 'Создать PDF'; }
+  toast(err ? 'Не удалось создать PDF: ' + err : `PDF сохранён: Загрузки/MAPEI/${file}`);
+};
+
+function moreScreen() {
+  bar('Настройки');
+  const when = store.get('syncedAt', null);
+  $('view').innerHTML = `
+    <h2 class="sec">Источник данных</h2>
+    <div class="card">
+      <b>▣ Кабинет Бомонд · Строительная химия</b>
+      <div class="st in" style="font-size:12px;margin-top:4px">● Загружено: ${items.length} товаров Mapei${when ? ' · ' + new Date(when).toLocaleString('ru-RU') : ''}</div>
+      <div class="row2" style="margin-top:10px">${window.Android ? '<button class="btn ghost" id="acc">Аккаунт</button>' : '<span class="hint">На iPhone остатки обновляются автоматически каждый час.</span>'}<button class="btn" id="resync">↻ Обновить</button></div>
+    </div>
+    <h2 class="sec">Цены</h2>
+    <div class="card">
+      <label class="switch" style="margin:0;color:var(--text);font-size:14px">Показывать цены <input type="checkbox" id="showPrices" ${showPrices ? 'checked' : ''}></label>
+      <label for="markup">Скидка / наценка, % (например −5 или 10)</label>
+      <input id="markup" type="number" inputmode="decimal" step="1" value="${markup || ''}" placeholder="0">
+      <button class="btn ghost" id="applyMarkup" style="margin-top:8px">Применить</button>
+      <p class="hint">Наценка меняет цены в каталоге и цену товаров, которые вы добавляете в корзину после этого.</p>
+    </div>
+    <h2 class="sec">О приложении</h2>
+    <p class="muted" style="font-size:12px;padding:0 4px">MAPEI Прайс · AMANA GROUP<br>Остатки и розничные цены — из кабинета lk.bomondceramica.ru.<br>Счета от: ${SELLERS.map(s => esc(s.short)).join(', ')}.</p>`;
+  if ($('acc')) $('acc').onclick = showLogin;
+  $('resync').onclick = sync;
+  $('showPrices').onchange = e => { showPrices = e.target.checked; store.set('showPrices', showPrices); };
+  $('applyMarkup').onclick = () => { markup = parseFloat($('markup').value) || 0; store.set('markup', markup); toast('Цены обновлены'); };
+}
+
+// ---------- router (hash history, so the phone's Back button walks back through screens) ----------
+function route() {
+  const h = location.hash || '#/';
+  const [, kind, arg] = h.match(/^#\/(\w*)\/?(.*)$/) || [];
+  const a = decodeURIComponent(arg || '');
+  navOn({ fav: '#/fav', cart: '#/cart', invoice: '#/cart', more: '#/more' }[kind] || '#/');
+  if (kind === 'g') groupScreen(a);
+  else if (kind === 's') searchScreen(a);
+  else if (kind === 'p') detail(a);
+  else if (kind === 'fav') favScreen();
+  else if (kind === 'cart') cartScreen();
+  else if (kind === 'invoice') invoiceScreen();
+  else if (kind === 'more') moreScreen();
+  else home();
+}
+window.addEventListener('hashchange', () => { route(); $('main').scrollTop = 0; });
+
+// ---------- cart / favourites ----------
+function saveCart() {
+  store.set('cart', cart);
+  $('cartBadge').hidden = !cart.length;
+  $('cartBadge').textContent = cart.length;
+}
+function addToCart(item, qty) {
+  const line = cart.find(l => l.id === item.id);
+  if (line) line.qty += qty; else cart.push({ id: item.id, art: item.art, name: item.name, qty, price: sell(item.price) });
+  if (line && line.qty <= 0) cart.splice(cart.indexOf(line), 1);
+  saveCart();
+  if (qty > 0) toast(`В корзине: ${inCart(item.id)} уп. · ${item.art}`);
+}
+
+// One listener for the content area: hearts, +/−, opening a product, tiles.
+$('main').addEventListener('click', e => {
+  const t = e.target.closest('[data-fav],[data-plus],[data-minus],[data-open],[data-go]');
+  if (!t) return;
+  if (t.dataset.fav) {
+    const id = t.dataset.fav;
+    fav.has(id) ? fav.delete(id) : fav.add(id);
+    store.set('fav', [...fav]);
+    t.classList.toggle('on', fav.has(id)); t.textContent = fav.has(id) ? '♥' : '♡';
+    if (location.hash === '#/fav') route();
+  } else if (t.dataset.plus) { const s = $('main').scrollTop; addToCart(byId(t.dataset.plus), 1); route(); $('main').scrollTop = s; }
+  else if (t.dataset.minus) { const s = $('main').scrollTop; addToCart(byId(t.dataset.minus), -1); route(); $('main').scrollTop = s; }
+  else if (t.dataset.open) location.hash = '#/p/' + encodeURIComponent(t.dataset.open);
+  else if (t.dataset.go) location.hash = t.dataset.go;
+});
+$('nav').onclick = e => { const b = e.target.closest('[data-go]'); if (b && (location.hash || '#/') !== b.dataset.go) location.hash = b.dataset.go; };
+
+// ---------- sync with Bomond ----------
+function sync() {
+  if (syncing) return;
+  syncing = true;
+  if ($('syncLine')) $('syncLine').textContent = syncText();
+  if (window.Android) return window.Android.sync(store.get('login', '') || BOMOND.login, store.get('pass', '') || BOMOND.password);
+  // iPhone / browser: GitHub Actions refreshes data.xml next to this page every hour.
+  fetch('data.xml', { cache: 'no-store' })
+    .then(r => { if (!r.ok) throw new Error('сайт ответил ' + r.status); return r.text(); })
+    .then(xml => onSync(null, xml), e => onSync(e.message === 'Failed to fetch' ? 'нет интернета' : e.message, null));
+}
+
+// Called by MainActivity when the download finishes.
+window.onSync = (err, xml) => {
+  syncing = false;
+  hideSplash();
+  if (err) { toast('Ошибка обновления: ' + err); if ($('syncLine')) $('syncLine').textContent = 'Ошибка: ' + err; return; }
+  const fresh = parseXml(xml);
+  if (!fresh.length) { toast('Ошибка: в выгрузке нет товаров Mapei'); return; }
+  items = fresh;
+  store.set('items', items);
+  // time of the export itself (Moscow), so the web version shows when the robot last fetched, not when the page loaded
+  const d = (xml.match(/<yml_catalog date="(\d{4}-\d\d-\d\d) (\d\d:\d\d)/) || []);
+  store.set('syncedAt', d[1] ? Date.parse(`${d[1]}T${d[2]}:00+03:00`) : Date.now());
+  // Detail and cart screens may hold half-typed inputs: refresh only list-like screens.
+  if (!/^#\/(p|cart|invoice|more)\b/.test(location.hash)) { const s = $('main').scrollTop; route(); $('main').scrollTop = s; }
+  toast('Остатки обновлены: ' + items.length + ' товаров');
+};
+
+function hideSplash() { $('splash').classList.add('hide'); }
+
+function showLogin() {
+  $('login').value = store.get('login', '') || BOMOND.login;
+  $('pass').value = store.get('pass', '') || BOMOND.password;
+  $('loginDlg').showModal();
+}
+$('loginDlg').addEventListener('close', () => {
+  if ($('loginDlg').returnValue !== 'ok') return;
+  store.set('login', $('login').value.trim());
+  store.set('pass', $('pass').value);
+  sync();
+});
+
+// ---------- start ----------
+saveCart();
+route();
+$('splashText').textContent = items.length ? `Загрузка каталога: ${items.length} товаров` : 'Загрузка остатков из кабинета Бомонд…';
+if (items.length) setTimeout(hideSplash, 700);
+setTimeout(hideSplash, 15000); // never trap the user on the splash if the network hangs
+sync(); // fresh stock and prices on every launch
+</script>
+</body>
+</html>
